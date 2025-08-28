@@ -108,11 +108,12 @@ with T6:
 
     if st.button("Translate"):
         if text.strip():
-            pipe = get_pipeline("translation_en_to_ar", model="Helsinki-NLP/opus-mt-en-ar")
+            pipe = get_pipeline("translation", model="Helsinki-NLP/opus-mt-en-ar")
             st.json(pipe(text, max_length=200))
 
 # ----------------------------
 # Footer
 # ----------------------------
 st.markdown("<div class='card'>Made with ❤️ using Streamlit & Hugging Face Transformers.</div>", unsafe_allow_html=True)
+
 
