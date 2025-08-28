@@ -1,6 +1,6 @@
 import streamlit as st
 from transformers import pipeline
-# from PyPDF2 import PdfReader   # Commented out because PDF upload is disabled
+from PyPDF2 import PdfReader
 
 # ----------------------------
 # Page setup
@@ -31,23 +31,31 @@ CUSTOM_CSS = """
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 st.markdown('<div class="gradient-title">Smart NLP App — Powered by BERT</div>', unsafe_allow_html=True)
-st.caption("Features: Sentiment Analysis, Text Classification, Named Entities, Question Answering, and Translation.")
+st.caption("Features: Sentiment Analysis, Text Classification, NER, Question Answering, and Translation (English → Arabic).")
 
 # ----------------------------
-# Cached pipelines
+# Cached pipelines (each with explicit model)
 # ----------------------------
 @st.cache_resource(show_spinner=False)
-def get_pipeline(task: str, model: str | None = None):
-    if model:
-        return pipeline(task, model=model)
-    return pipeline(task)
+def get_pipeline(task: str):
+    if task == "sentiment":
+        return pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
+    elif task == "classification":
+        return pipeline("text-classification", model="facebook/bart-large-mnli")
+    elif task == "ner":
+        return pipeline("ner", model="dslim/bert-base-NER", grouped_entities=True)
+    elif task == "qa":
+        return pipeline("question-answering", model="distilbert-base-cased-distilled-squad")
+    elif task == "translation":
+        return pipeline("translation_en_to_ar", model="Helsinki-NLP/opus-mt-en-ar")
+    else:
+        raise ValueError("Unknown task")
 
 # ----------------------------
 # Tabs
 # ----------------------------
-T1, T2, T3, T4, T6 = st.tabs([
+T1, T2, T3, T4, T5 = st.tabs([
     "🧠 Sentiment", "🏷️ Classification", "🧩 NER", "❓ Q&A", "🌐 Translate"
-    # Removed Summarize & PDF Upload
 ])
 
 # ----------------------------
@@ -59,7 +67,7 @@ with T1:
 
     if st.button("Analyze Sentiment"):
         if txt.strip():
-            pipe = get_pipeline("sentiment-analysis")
+            pipe = get_pipeline("sentiment")
             st.json(pipe(txt))
 
 # ----------------------------
@@ -68,12 +76,12 @@ with T1:
 with T2:
     st.subheader("Text Classification (Zero-Shot)")
     text = st.text_area("Enter text", key="classification_text")
+    labels = st.text_input("Candidate labels (comma separated)", "politics, sports, business, tech")
 
     if st.button("Classify"):
         if text.strip():
-            pipe = get_pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
-            labels = ["News", "Politics", "Sports", "Technology", "Health", "Business", "Entertainment"]
-            st.json(pipe(text, candidate_labels=labels))
+            pipe = get_pipeline("classification")
+            st.json(pipe(text, candidate_labels=[l.strip() for l in labels.split(",") if l.strip()]))
 
 # ----------------------------
 # 3) NER
@@ -81,39 +89,36 @@ with T2:
 with T3:
     st.subheader("Named Entity Recognition (NER)")
     text = st.text_area("Enter text", key="ner_text")
+
     if st.button("Extract Entities"):
         if text.strip():
-            pipe = pipeline("ner", grouped_entities=True)
-            st.json(pipe(text, grouped_entities=True))
+            pipe = get_pipeline("ner")
+            st.json(pipe(text))
 
 # ----------------------------
 # 4) Question Answering
 # ----------------------------
 with T4:
     st.subheader("Question Answering")
-    context = st.text_area("Context", key="qa_context")
-    question = st.text_area("Question", key="qa_question")
+    context = st.text_area("Enter context", key="qa_context")
+    question = st.text_area("Enter question", key="qa_question")
 
-    if st.button("Get Answer"):
+    if st.button("Answer"):
         if context.strip() and question.strip():
-            pipe = get_pipeline("question-answering")
+            pipe = get_pipeline("qa")
             st.json(pipe(question=question, context=context))
 
 # ----------------------------
 # 5) Translation
 # ----------------------------
-with T6:
+with T5:
     st.subheader("Translation (English → Arabic)")
     text = st.text_area("Enter English text", key="translation_text")
 
     if st.button("Translate"):
         if text.strip():
-            pipe = get_pipeline("translation", model="Helsinki-NLP/opus-mt-en-ar")
-            st.json(pipe(text, max_length=200))
+            pipe = get_pipeline("translation")
+            st.json(pipe(text, max_length=400))
 
-# ----------------------------
 # Footer
-# ----------------------------
 st.markdown("<div class='card'>Made with ❤️ using Streamlit & Hugging Face Transformers.</div>", unsafe_allow_html=True)
-
-
