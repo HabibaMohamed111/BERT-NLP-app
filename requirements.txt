@@ -2,3 +2,5 @@ streamlit
 transformers
 torch
 PyPDF2
+sentencepiece
+protobuf
