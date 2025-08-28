@@ -83,7 +83,7 @@ with T3:
     text = st.text_area("Enter text", key="ner_text")
     if st.button("Extract Entities"):
         if text.strip():
-            pipe = get_pipeline("ner", model="dslim/bert-base-NER")
+            pipe = pipeline("ner", grouped_entities=True)
             st.json(pipe(text, grouped_entities=True))
 
 # ----------------------------
@@ -115,3 +115,4 @@ with T6:
 # Footer
 # ----------------------------
 st.markdown("<div class='card'>Made with ❤️ using Streamlit & Hugging Face Transformers.</div>", unsafe_allow_html=True)
+
