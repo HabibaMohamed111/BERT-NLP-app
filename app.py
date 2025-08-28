@@ -14,10 +14,12 @@ def get_pipeline(task, model=None):
     elif task == "qa":
         return pipeline("question-answering")
     elif task == "translation":
-        model_name = "Helsinki-NLP/opus-mt-en-ar"
-        tokenizer = MarianTokenizer.from_pretrained(model_name)
-        model = MarianMTModel.from_pretrained(model_name)
-        return pipeline("translation", model=model, tokenizer=tokenizer)
+    return pipeline(
+        "translation_en_to_ar",
+        model="Helsinki-NLP/opus-mt-en-ar",
+        max_length=100,
+        clean_up_tokenization_spaces=True
+    )
 
 
 # ---------------- UI ----------------
@@ -79,3 +81,4 @@ elif option == "🌐 Translate":
         result = pipe(text)
         st.write("**Translation:**")
         st.success(result[0]['translation_text'])
+
