@@ -5,25 +5,29 @@ from transformers import pipeline
 @st.cache_resource
 def get_pipeline(task):
     if task == "sentiment":
-        return pipeline("sentiment-analysis")  # صغير نسبيًا
+        # موديل أصغر لتحليل المشاعر
+        return pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
     elif task == "classification":
-        return pipeline("zero-shot-classification",
-                        model="facebook/bart-large-mnli")  # كبير نسبيًا
+        # موديل أصغر للـ Zero-Shot Classification
+        return pipeline("zero-shot-classification", model="facebook/distilbart-mnli")
     elif task == "ner":
+        # موديل NER أصغر
         return pipeline("ner", grouped_entities=True)
     elif task == "qa":
-        return pipeline("question-answering")
+        # موديل أصغر للـ Question Answering
+        return pipeline("question-answering", model="distilbert-base-cased-distilled-squad")
     elif task == "translation":
+        # موديل ترجمة أخف
         return pipeline(
             "translation_en_to_ar",
             model="Helsinki-NLP/opus-mt-en-ar",
-            max_length=100,
+            max_length=50,
             clean_up_tokenization_spaces=True
         )
 
 # ---------------- UI ----------------
-st.title("Smart NLP App — Powered by BERT")
-st.write("Features: Sentiment Analysis, Classification, NER, Q&A, Translation (English → Arabic)")
+st.title("Smart NLP App — Lightweight Version")
+st.write("Features: Sentiment, Classification, NER, Q&A, Translation (English → Arabic)")
 
 option = st.sidebar.radio("Choose Feature:", 
                           ["🧠 Sentiment", "🏷️ Classification", "🧩 NER", "❓ Q&A", "🌐 Translate"])
