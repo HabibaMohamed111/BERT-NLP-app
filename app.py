@@ -14,7 +14,7 @@ def get_pipeline(task, model=None):
     elif task == "qa":
         return pipeline("question-answering")
     elif task == "translation":
-    return pipeline(
+        return pipeline(
         "translation_en_to_ar",
         model="Helsinki-NLP/opus-mt-en-ar",
         max_length=100,
@@ -81,4 +81,5 @@ elif option == "🌐 Translate":
         result = pipe(text)
         st.write("**Translation:**")
         st.success(result[0]['translation_text'])
+
 
