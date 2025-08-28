@@ -47,7 +47,7 @@ def get_pipeline(task: str):
     elif task == "qa":
         return pipeline("question-answering", model="distilbert-base-cased-distilled-squad")
     elif task == "translation":
-    return pipeline("translation", model="Helsinki-NLP/opus-mt-en-ar")
+        return pipeline("translation", model="Helsinki-NLP/opus-mt-en-ar")
     else:
         raise ValueError("Unknown task")
 
@@ -122,4 +122,5 @@ with T5:
 
 # Footer
 st.markdown("<div class='card'>Made with ❤️ using Streamlit & Hugging Face Transformers.</div>", unsafe_allow_html=True)
+
 
