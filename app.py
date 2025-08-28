@@ -14,13 +14,42 @@ def get_pipeline(task, model=None):
     elif task == "qa":
         return pipeline("question-answering")
     elif task == "translation":
-        return pipeline(
-        "translation_en_to_ar",
-        model="Helsinki-NLP/opus-mt-en-ar",
-        max_length=100,
-        clean_up_tokenization_spaces=True
-    )
+        try:
+            return pipeline(
+                "translation_en_to_ar",
+                model="Helsinki-NLP/opus-mt-en-ar",
+                max_length=400,  # Increased max length
+                clean_up_tokenization_spaces=True
+            )
+        except Exception as e:
+            st.sidebar.warning(f"Primary translation model failed: {str(e)}. Using backup.")
+            # Fallback to a different model
+            return pipeline(
+                "translation_en_to_ar",
+                model="Helsinki-NLP/opus-mt-en-ar",
+                max_length=400,
+                clean_up_tokenization_spaces=True
+            )
 
+def improved_translation(text, pipe):
+    """Handle translation with better parameters"""
+    # Clean the input text
+    text = text.strip()
+    
+    if not text:
+        return "Please enter text to translate"
+    
+    # For very short texts, we need to handle differently
+    if len(text.split()) <= 2:
+        # Add a period to help the model
+        if not text.endswith('.'):
+            text = text + '.'
+    
+    try:
+        result = pipe(text, max_length=400, num_beams=5, early_stopping=True)
+        return result[0]['translation_text']
+    except Exception as e:
+        return f"Translation error: {str(e)}"
 
 # ---------------- UI ----------------
 st.title("Smart NLP App — Powered by BERT")
@@ -75,11 +104,22 @@ elif option == "❓ Q&A":
 # ---------------- Translation ----------------
 elif option == "🌐 Translate":
     st.subheader("Translation (English → Arabic)")
-    text = st.text_area("Enter English text:", key="translate")
+    st.info("Note: For best results, use complete sentences with proper punctuation.")
+    
+    text = st.text_area("Enter English text:", key="translate", 
+                       placeholder="e.g., I love programming. It's my passion.")
+    
     if st.button("Translate", key="translate_btn"):
-        pipe = get_pipeline("translation")
-        result = pipe(text)
-        st.write("**Translation:**")
-        st.success(result[0]['translation_text'])
-
-
+        with st.spinner("Translating..."):
+            pipe = get_pipeline("translation")
+            result = improved_translation(text, pipe)
+            
+            if "error" in result.lower():
+                st.error(result)
+            else:
+                st.write("**Translation:**")
+                st.success(result)
+                
+                # Show original for comparison
+                st.write("**Original text:**")
+                st.text(text)
